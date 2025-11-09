@@ -154,11 +154,11 @@ function adjustLayout(width, height) {
     volume.style.marginRight = `${2 * widthRatio}px`;
     volumeSlider.style.height = `${4 * scaleRatio}px`;
     volumeSlider.style.borderRadius = `${2 * scaleRatio}px`;
-    volumeSlider.style.marginTop = `${8 * scaleRatio}px`;
+    volumeSlider.style.marginTop = `${2 * scaleRatio}px`;
     volumeCircle.style.height = `${8 * scaleRatio}px`;
     volumeCircle.style.width = `${8 * scaleRatio}px`;
-    volumeCircle.style.borderRadius = `${4 * scaleRatio}px`;
-    
+    volumeCircle.style.borderRadius = `${3.5 * scaleRatio}px`;
+    volumeCircle.style.bottom = `${-2 * scaleRatio}px`;
     const airWidth = 54 * widthRatio;
     document.querySelector('.air').style.width = `${airWidth}px`;
     
