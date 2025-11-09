@@ -65,11 +65,19 @@
         .preview {
             margin: 30px 0;
             text-align: center;
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
         }
         .preview iframe {
             border: none;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+            box-sizing: border-box;
         }
         .iframe-code {
             margin-top: 20px;
@@ -126,17 +134,18 @@
         <h1>网易云外链播放器 By ENA</h1>
         <div class="form-grid">
             <div class="form-group">
+                <label for="cardWidth">播放器宽度（px）</label>
+                <input type="number" id="cardWidth" value="260" min="200" max="400" placeholder="200-400">
+            </div>
+            <div class="form-group">
+                <label for="cardHeight">播放器高度（px）</label>
+                <input type="number" id="cardHeight" value="110" min="80" max="200" placeholder="80-200">
+            </div>
+            <div class="form-group">
                 <label for="type">类型</label>
                 <select id="type" onchange="toggleInputFields()">
                     <option value="playlist">歌单</option>
                     <option value="id">歌曲</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="theme">主题</label>
-                <select id="theme">
-                    <option value="dark">深色</option>
-                    <option value="light">浅色</option>
                 </select>
             </div>
             <div class="form-group" id="playlist-group">
@@ -146,18 +155,6 @@
             <div class="form-group" id="id-group" style="display: none;">
                 <label for="ids">歌曲ID（多个ID用英文逗号分隔）</label>
                 <input type="text" id="ids" placeholder="歌曲ID，例如：114514,114519 你也可以在下方搜索歌曲">
-            </div>
-            <div class="form-group">
-                <label for="themeColor">主题色</label>
-                <input type="color" id="themeColor" value="#008EFF">
-            </div>
-            <div class="form-group">
-                <label for="width">宽度（px）</label>
-                <input type="number" id="width" value="260" min="100">
-            </div>
-            <div class="form-group">
-                <label for="height">高度（px）</label>
-                <input type="number" id="height" value="110" min="50">
             </div>
             <div class="form-group">
                 <label for="search-type">搜索类型</label>
@@ -172,6 +169,11 @@
                     <input type="text" id="search-input" placeholder="输入歌曲或歌单名称" style="flex: 1;">
                     <button id="search-btn" style="margin-left: 10px;">搜索</button>
                 </div>
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+                <label for="baseUrl">播放器地址</label>
+                <input type="text" id="baseUrl" placeholder="自动检测当前域名，或手动输入" style="font-size: 12px;">
+                <small style="display: block; color: #666; margin-top: 4px; font-size: 12px;">留空将自动使用当前域名</small>
             </div>
         </div>
         <div class="error" id="error"></div>
@@ -255,23 +257,45 @@
             const type = document.getElementById('type').value;
             const playlist = document.getElementById('playlist').value.trim();
             const ids = document.getElementById('ids').value.trim();
-            const theme = document.getElementById('theme').value;
-            const themeColor = document.getElementById('themeColor').value;
-            const width = document.getElementById('width').value;
-            const height = document.getElementById('height').value;
-
-            const baseUrl = 'https://enamscard.pages.dev/';
+            const theme = 'dark';
+            const themeColor = '#008EFF';
+            const cardWidth = document.getElementById('cardWidth').value;
+            const cardHeight = document.getElementById('cardHeight').value;
+            
+            let baseUrl = document.getElementById('baseUrl').value.trim();
+            if (!baseUrl) {
+                const currentOrigin = window.location.origin;
+                baseUrl = currentOrigin + '/';
+            }
+            if (!baseUrl.endsWith('/')) {
+                baseUrl += '/';
+            }
+            
             const param = type === 'playlist' ? `playlist=${playlist}` : `id=${ids}`;
-            const src = `${baseUrl}?${param}&theme=${theme}&themeColor=${encodeURIComponent(themeColor)}`;
+            let src = `${baseUrl}?${param}&theme=${theme}&themeColor=${encodeURIComponent(themeColor)}`;
+            
+            if (cardWidth) src += `&cardWidth=${cardWidth}`;
+            if (cardHeight) src += `&cardHeight=${cardHeight}`;
 
             const iframe = document.getElementById('preview-iframe');
             iframe.src = src;
-            iframe.width = width;
-            iframe.height = height;
+            const cardW = parseInt(cardWidth) || 260;
+            const cardH = parseInt(cardHeight) || 110;
+            const originalWidth = 260;
+            const originalHeight = 110;
+            const scaleRatio = Math.min(cardW / originalWidth, cardH / originalHeight);
+            const cardBorderRadius = 10 * scaleRatio;
+            
+            const iframeWidth = cardW;
+            const iframeHeight = cardH;
+            iframe.width = iframeWidth;
+            iframe.height = iframeHeight;
+            iframe.setAttribute('scrolling', 'no');
             iframe.style.border = 'none';
-            iframe.style.borderRadius = '8px';
+            iframe.style.borderRadius = `${cardBorderRadius}px`;
+            iframe.style.overflow = 'hidden';
 
-            const iframeCode = `<iframe src="${src}" width="${width}" height="${height}" style="border: none; border-radius: 8px;" frameborder="0"></iframe>`;
+            const iframeCode = `<iframe src="${src}" width="${cardW}" height="${cardH}" scrolling="no" style="border: none; border-radius: ${cardBorderRadius}px; overflow: hidden;" frameborder="0"></iframe>`;
             document.getElementById('iframe-code').value = iframeCode;
         }
 
@@ -341,7 +365,14 @@
         }
 
         function initEventListeners() {
-            const inputs = ['type', 'theme', 'themeColor', 'width', 'height', 'playlist', 'ids'];
+            // 初始化 baseUrl 默认值（自动检测）
+            const baseUrlInput = document.getElementById('baseUrl');
+            if (baseUrlInput && !baseUrlInput.value) {
+                const currentOrigin = window.location.origin;
+                baseUrlInput.placeholder = `自动检测: ${currentOrigin}/`;
+            }
+            
+            const inputs = ['type', 'baseUrl', 'cardWidth', 'cardHeight', 'playlist', 'ids'];
             inputs.forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {
@@ -371,6 +402,20 @@
                 }
             });
         }
+
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'player-actual-size') {
+                const iframe = document.getElementById('preview-iframe');
+                if (iframe) {
+                    const actualWidth = event.data.width;
+                    const actualHeight = event.data.height;
+                    if (actualWidth && actualHeight) {
+                        iframe.width = actualWidth;
+                        iframe.height = actualHeight;
+                    }
+                }
+            }
+        });
 
         window.onload = () => {
             initEventListeners();
