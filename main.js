@@ -433,13 +433,8 @@ async function loadSong() {
     const urlRes = await fetch(`https://163api.qijieya.cn/song/url/v1?id=${id}&level=jymaster`);
     const urlJson = await urlRes.json();
     audio.src = urlJson.data[0].url;
-    const simulatedClick = new MouseEvent('click', {
-        view: window,
-        bubbles: true,
-        cancelable: true
-    });
-    document.body.dispatchEvent(simulatedClick);
-    tryPlay();
+    // 默认暂停，需要手动点击播放按钮
+    // tryPlay();
 }
 
 async function tryPlay() {
