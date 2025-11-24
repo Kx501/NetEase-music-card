@@ -134,7 +134,7 @@
 	}
 
 	.controls svg:hover {
-	  color: #4a9eff;
+	  color: var(--theme-color);
 	  transform: scale(1.1);
 	}
 
@@ -154,7 +154,7 @@
 	}
 
 	#loop_toggle:hover .loop-icon {
-	  color: #4a9eff;
+	  color: var(--theme-color);
 	  transform: scale(1.1);
 	}
 
@@ -186,7 +186,7 @@
 	}
 
 	.volume .slider .green {
-	  background-color: #4a9eff;
+	  background-color: var(--theme-color);
 	  height: 100%;
 	  width: 100%;
 	  border-radius: 2px;
@@ -217,7 +217,7 @@
 
 	.progress-elapsed {
 	  width: 0%;
-	  background-color: #4a9eff;
+	  background-color: var(--theme-color);
 	  height: 100%;
 	  border-radius: 3px;
 	}
@@ -293,7 +293,7 @@
     <p class="time-text time-now" id="time_now">0:00</p>
     <p class="time-text time-full" id="time_full">0:00</p>
   </div>
-  <audio id="audio" preload="auto" autoplay></audio>
+  <audio id="audio" preload="auto"></audio>
   <script src="recommend.js"></script>
   <script src="main.js"></script>
 </body>

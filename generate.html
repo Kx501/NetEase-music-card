@@ -133,14 +133,33 @@
     <div class="container">
         <h1>网易云外链播放器 By ENA</h1>
         <div class="form-grid">
+            <!-- 播放器地址 (第一列) -->
+            <div class="form-group">
+                <label for="baseUrl">播放器地址</label>
+                <input type="text" id="baseUrl" placeholder="自动检测当前域名，或手动输入" style="font-size: 12px;">
+                <small style="display: block; color: #666; margin-top: 4px; font-size: 12px;">留空将自动使用当前域名</small>
+            </div>
+            
+            <!-- 主题颜色 (第二列) -->
+            <div class="form-group">
+                <label for="themeColor">主题颜色</label>
+                <input type="color" id="themeColor" value="#008EFF">
+                <small style="display: block; color: #666; margin-top: 4px; font-size: 12px;">选择播放器UI元素的颜色</small>
+            </div>
+            
+            <!-- 播放器宽度 (第一列) -->
             <div class="form-group">
                 <label for="cardWidth">播放器宽度（px）</label>
                 <input type="number" id="cardWidth" value="260" min="200" max="400" placeholder="200-400">
             </div>
+            
+            <!-- 播放器高度 (第二列) -->
             <div class="form-group">
                 <label for="cardHeight">播放器高度（px）</label>
                 <input type="number" id="cardHeight" value="110" min="80" max="200" placeholder="80-200">
             </div>
+            
+            <!-- 选择类型 (第一列) -->
             <div class="form-group">
                 <label for="type">类型</label>
                 <select id="type" onchange="toggleInputFields()">
@@ -148,14 +167,20 @@
                     <option value="id">歌曲</option>
                 </select>
             </div>
-            <div class="form-group" id="playlist-group">
-                <label for="playlist">歌单ID</label>
-                <input type="text" id="playlist" placeholder="歌单ID，例如：6821530729 你也可以在下方搜索歌单">
+            
+            <!-- ID输入框 (第二列) -->
+            <div class="form-group">
+                <div id="playlist-group">
+                    <label for="playlist">歌单ID</label>
+                    <input type="text" id="playlist" placeholder="歌单ID，例如：6821530729 你也可以在下方搜索歌单">
+                </div>
+                <div id="id-group" style="display: none;">
+                    <label for="ids">歌曲ID（多个ID用英文逗号分隔）</label>
+                    <input type="text" id="ids" placeholder="歌曲ID，例如：114514,114519 你也可以在下方搜索歌曲">
+                </div>
             </div>
-            <div class="form-group" id="id-group" style="display: none;">
-                <label for="ids">歌曲ID（多个ID用英文逗号分隔）</label>
-                <input type="text" id="ids" placeholder="歌曲ID，例如：114514,114519 你也可以在下方搜索歌曲">
-            </div>
+            
+            <!-- 搜索类型 (第一列) -->
             <div class="form-group">
                 <label for="search-type">搜索类型</label>
                 <select id="search-type">
@@ -163,6 +188,8 @@
                     <option value="1">歌曲</option>
                 </select>
             </div>
+            
+            <!-- 搜索关键词 (第二列) -->
             <div class="form-group">
                 <label for="search-input">搜索关键词</label>
                 <div style="display: flex; align-items: center;">
@@ -170,11 +197,7 @@
                     <button id="search-btn" style="margin-left: 10px;">搜索</button>
                 </div>
             </div>
-            <div class="form-group" style="grid-column: 1 / -1;">
-                <label for="baseUrl">播放器地址</label>
-                <input type="text" id="baseUrl" placeholder="自动检测当前域名，或手动输入" style="font-size: 12px;">
-                <small style="display: block; color: #666; margin-top: 4px; font-size: 12px;">留空将自动使用当前域名</small>
-            </div>
+
         </div>
         <div class="error" id="error"></div>
         <div class="search-results" id="search-results"></div>
@@ -257,8 +280,7 @@
             const type = document.getElementById('type').value;
             const playlist = document.getElementById('playlist').value.trim();
             const ids = document.getElementById('ids').value.trim();
-            const theme = 'dark';
-            const themeColor = '#008EFF';
+            const themeColor = document.getElementById('themeColor').value;
             const cardWidth = document.getElementById('cardWidth').value;
             const cardHeight = document.getElementById('cardHeight').value;
             
@@ -272,7 +294,7 @@
             }
             
             const param = type === 'playlist' ? `playlist=${playlist}` : `id=${ids}`;
-            let src = `${baseUrl}?${param}&theme=${theme}&themeColor=${encodeURIComponent(themeColor)}`;
+            let src = `${baseUrl}?${param}&themeColor=${encodeURIComponent(themeColor)}`;
             
             if (cardWidth) src += `&cardWidth=${cardWidth}`;
             if (cardHeight) src += `&cardHeight=${cardHeight}`;
@@ -372,7 +394,7 @@
                 baseUrlInput.placeholder = `自动检测: ${currentOrigin}/`;
             }
             
-            const inputs = ['type', 'baseUrl', 'cardWidth', 'cardHeight', 'playlist', 'ids'];
+            const inputs = ['type', 'baseUrl', 'cardWidth', 'cardHeight', 'playlist', 'ids', 'themeColor'];
             inputs.forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {

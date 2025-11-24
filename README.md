@@ -6,9 +6,9 @@
 
 支持亮色\暗色主题，支持自定义主题色，配置简单
 
-配置页面：https://enamscard.pages.dev/generate
+配置页面：https://neplayer.pages.dev/generate
 
-播放器：https://enamscard.pages.dev/?playlist=6821530729&theme=dark&themeColor=%23008eff
+播放器：https://neplayer.pages.dev/?playlist=6821530729&theme=dark&themeColor=%23008eff
 
 请求参数：
 
@@ -16,5 +16,6 @@
 | 参数名           | 类型         | 描述                                      |
 |------------------|--------------|-------------------------------------------|
 | `playlist/id`    | string      | 歌单\歌曲ID，支持多首单曲，ID用逗号分隔 |
-| `theme`          | string      | 播放器主题，取值为 `dark` 或 `light`，默认暗色 |
 | `themeColor`     | string      | 播放器主题色，16进制色号，`#`需替换为 `%23` |
+| `cardWidth`      | number       | 播放器卡片宽度，范围200-400px，默认260px   |
+| `cardHeight`     | number       | 播放器卡片高度，范围80-200px，默认110px    |

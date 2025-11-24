@@ -1,6 +1,7 @@
 const urlParams = new URLSearchParams(window.location.search);
 const songParam = urlParams.get('id');
 const playlistParam = urlParams.get('playlist');
+const themeColorParam = urlParams.get('themeColor');
 const audio = document.getElementById('audio');
 const title = document.getElementById('song-title');
 const artist = document.getElementById('song-artist');
@@ -19,8 +20,6 @@ const card = document.querySelector('.card');
 const songInfo = document.querySelector('.song-info');
 const controls = document.querySelector('.controls');
 const progressBar = document.querySelector('.progress-bar');
-const volumeButtonSvg = document.getElementById('volume_button');
-const playPauseSvg = document.getElementById('playpause');
 const prevSvg = document.getElementById('prev');
 const nextSvg = document.getElementById('next');
 const loopToggle = document.getElementById('loop_toggle');
@@ -34,7 +33,39 @@ let isVolumeOpen = false;
 let isDragging = false;
 let isVolumeDragging = false;
 let lastProgress = 0;
-const themeColor = '#4a9eff';
+let desiredPlaybackState = false;
+const themeColor = themeColorParam || '#4a9eff';
+
+function applyThemeColor(color) {
+    // 创建或更新CSS变量
+    document.documentElement.style.setProperty('--theme-color', color);
+    
+    // 应用主题色到进度条
+    elapsed.style.backgroundColor = color;
+    
+    // 应用主题色到音量条
+    volumeFill.style.backgroundColor = color;
+    
+    // 创建或更新悬停效果的样式
+    let styleId = 'theme-hover-style';
+    let styleElement = document.getElementById(styleId);
+    
+    if (!styleElement) {
+        styleElement = document.createElement('style');
+        styleElement.id = styleId;
+        document.head.appendChild(styleElement);
+    }
+    
+    styleElement.textContent = `
+        .controls svg:hover,
+        #loop_toggle:hover .loop-icon {
+            color: ${color};
+        }
+    `;
+}
+
+// 应用主题色
+applyThemeColor(themeColor);
 
 function setCardSize() {
     const cardWidthParam = urlParams.get('cardWidth');
@@ -124,9 +155,9 @@ function adjustLayout(width, height) {
     songInfo.style.top = `${row1Center}px`;
     songInfo.style.bottom = 'auto';
     
-    if (playPauseSvg) {
-        playPauseSvg.style.width = `${controlIconSize}px`;
-        playPauseSvg.style.height = `${controlIconSize}px`;
+    if (playPauseButton) {
+        playPauseButton.style.width = `${controlIconSize}px`;
+        playPauseButton.style.height = `${controlIconSize}px`;
     }
     if (prevSvg) {
         prevSvg.style.width = `${controlIconSize}px`;
@@ -144,9 +175,9 @@ function adjustLayout(width, height) {
         loopShuffle.style.width = `${volumeIconSize}px`;
         loopShuffle.style.height = `${volumeIconSize}px`;
     }
-    if (volumeButtonSvg) {
-        volumeButtonSvg.style.width = `${volumeIconSize}px`;
-        volumeButtonSvg.style.height = `${volumeIconSize}px`;
+    if (volumeButton) {
+        volumeButton.style.width = `${volumeIconSize}px`;
+        volumeButton.style.height = `${volumeIconSize}px`;
     }
     
     const volumeWidth = 50 * widthRatio;
@@ -230,6 +261,11 @@ volumeCircle.style.right = '0%';
 const playPath = "M12 21.6a9.6 9.6 0 1 0 0-19.2 9.6 9.6 0 0 0 0 19.2Zm-2.4-12a1.2 1.2 0 0 1 2.4-.848l3.6 2.4a1.2 1.2 0 0 1 0 2.096l-3.6 2.4a1.2 1.2 0 0 1-2.4-.848V9.6Z";
 const pausePath = "M21.6 12a9.6 9.6 0 1 1-19.2 0 9.6 9.6 0 0 1 19.2 0ZM8.4 9.6a1.2 1.2 0 1 1 2.4 0v4.8a1.2 1.2 0 1 1-2.4 0V9.6Zm6-1.2a1.2 1.2 0 0 0-1.2 1.2v4.8a1.2 1.2 0 0 0 2.4 0V9.6a1.2 1.2 0 0 0-1.2-1.2Z";
 
+// 初始化播放按钮为播放图标（因为音频默认是暂停状态）
+if (playPauseIcon) {
+  playPauseIcon.setAttribute('d', playPath);
+}
+
 function checkTextOverflow() {
     const cardWidth = card.offsetWidth;
     
@@ -271,8 +307,10 @@ audio.addEventListener('pause', () => playPauseIcon.setAttribute('d', playPath))
 
 playPauseButton.addEventListener('click', () => {
     if (audio.paused) {
+        desiredPlaybackState = true;
         audio.play();
     } else {
+        desiredPlaybackState = false;
         audio.pause();
     }
 });
@@ -356,7 +394,8 @@ loopToggle.addEventListener('click', () => {
 
 updateLoopIcon();
 
-document.getElementById('next').addEventListener('click', () => {
+nextSvg.addEventListener('click', () => {
+    const shouldPlay = desiredPlaybackState;
     if (playMode === 'recommend') {
         updateSongWeight(songs[playIndex], lastProgress * 100);
         playIndex = getRecommendedSongIndex(playIndex);
@@ -365,32 +404,34 @@ document.getElementById('next').addEventListener('click', () => {
     } else {
         playIndex = 0;
     }
-    loadSong();
+    loadSong(shouldPlay);
 });
 
-document.getElementById('prev').addEventListener('click', () => {
+prevSvg.addEventListener('click', () => {
+    const shouldPlay = desiredPlaybackState;
     if (playIndex > 0) {
         playIndex--;
     } else {
         playIndex = songs.length - 1;
     }
-    loadSong();
+    loadSong(shouldPlay);
 });
 
 audio.addEventListener('ended', () => {
+    const shouldPlay = desiredPlaybackState;
     if (playMode === 'recommend') {
         updateSongWeight(songs[playIndex], lastProgress * 100);
         playIndex = getRecommendedSongIndex(playIndex);
-        loadSong();
+        loadSong(shouldPlay);
     } else if (playMode === 'loop') {
         audio.currentTime = 0;
         audio.play();
     } else if (playIndex < songs.length - 1) {
         playIndex++;
-        loadSong();
+        loadSong(shouldPlay);
     } else {
         playIndex = 0;
-        loadSong();
+        loadSong(shouldPlay);
     }
 });
 
@@ -401,6 +442,13 @@ audio.addEventListener('timeupdate', () => {
     timeFull.innerText = formatTime(audio.duration);
     lastProgress = percent;
 });
+
+function resetPlaybackUI() {
+    elapsed.style.width = '0%';
+    timeNow.innerText = '0:00';
+    timeFull.innerText = '0:00';
+    lastProgress = 0;
+}
 
 function formatTime(t) {
     const m = Math.floor(t / 60);
@@ -417,11 +465,15 @@ async function fetchSongs() {
         songs = songParam.split(',');
     }
     initRecommender(songs);
-    loadSong();
+    loadSong(false);
 }
 
-async function loadSong() {
+async function loadSong(shouldPlay = false) {
     const id = songs[playIndex];
+    if (!id) return;
+    audio.pause();
+    audio.currentTime = 0;
+    resetPlaybackUI();
     const detail = await fetch(`https://163api.qijieya.cn/song/detail?ids=${id}`);
     const detailJson = await detail.json();
     const song = detailJson.songs[0];
@@ -432,18 +484,17 @@ async function loadSong() {
     checkTextOverflow();
     const urlRes = await fetch(`https://163api.qijieya.cn/song/url/v1?id=${id}&level=jymaster`);
     const urlJson = await urlRes.json();
-    audio.src = urlJson.data[0].url;
-    // 默认暂停，需要手动点击播放按钮
-    // tryPlay();
-}
-
-async function tryPlay() {
-    try {
-        await audio.play();
-        console.log('音频播放成功');
-    } catch (error) {
-        console.warn('音频播放失败', error);
-        setTimeout(tryPlay, 100);
+    const songUrl = urlJson.data[0]?.url;
+    if (!songUrl) return;
+    audio.src = songUrl;
+    if (shouldPlay) {
+        try {
+            await audio.play();
+        } catch (error) {
+            console.warn('自动播放新歌曲失败', error);
+        }
+    } else {
+        audio.pause();
     }
 }
 
